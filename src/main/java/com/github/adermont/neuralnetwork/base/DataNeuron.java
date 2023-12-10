@@ -1,5 +1,6 @@
 package com.github.adermont.neuralnetwork.base;
 
+import com.github.adermont.neuralnetwork.math.DerivableFunction;
 import com.github.adermont.neuralnetwork.math.Value;
 
 public class DataNeuron extends Neuron
@@ -8,7 +9,8 @@ public class DataNeuron extends Neuron
 
     public DataNeuron(int neuronId)
     {
-        super(neuronId, ActivationFunction.IDENTITY);
+        super(neuronId, DerivableFunction.IDENTITY);
+        output = new Value("data"+neuronId, 0);
     }
 
     public void setData(double[] pData)
@@ -16,10 +18,9 @@ public class DataNeuron extends Neuron
         data = pData;
     }
 
-    @Override
-    public Value getOutput()
+    public void act()
     {
-        return new Value(data[getNeuronId()]);
+        output.set(data[getNeuronId()]);
     }
 
 }

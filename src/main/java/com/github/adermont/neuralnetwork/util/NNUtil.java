@@ -20,7 +20,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Random;
 import java.util.stream.DoubleStream;
 
 import static guru.nidi.graphviz.model.Factory.graph;
@@ -58,7 +58,8 @@ public class NNUtil
     public static void buildNodes(Value v, ArrayList<Node> nodes, ArrayList<Node> edges)
     {
         String id = "" + System.identityHashCode(v);
-        String label = "{%.3f | grad=%.3f}".formatted(v.data().doubleValue(), v.gradient());
+        String label = "{%s | %.3f | grad=%.3f}".formatted(v.label(), v.data().doubleValue(),
+                                                           v.gradient());
         Node node0 = node(id).with(Label.of(label), Shape.M_RECORD, Style.lineWidth(2));
         nodes.add(node0);
 
@@ -67,7 +68,7 @@ public class NNUtil
             final Node node1 = node(id + v.operator()).with(Label.of(v.operator()),
                                                             Style.lineWidth(2));
             nodes.add(node1.link(node0));
-            Arrays.stream(v.children()).forEach(child -> {
+            v.children().forEach(child -> {
                 String idChild = "" + System.identityHashCode(child);
                 edges.add(node(idChild).link(node1));
                 buildNodes(child, nodes, edges);
@@ -113,7 +114,8 @@ public class NNUtil
                 {
                     v.retroPropagate();
                     guru.nidi.graphviz.model.Graph g = buildGraphModel(v);
-                    BufferedImage image = Graphviz.fromGraph(g).render(Format.SVG).toImage();
+                    BufferedImage image = Graphviz.fromGraph(g).width(1024).render(Format.PNG)
+                                                  .toImage();
                     label.setIcon(new ImageIcon(image));
                 }
             });
@@ -126,14 +128,39 @@ public class NNUtil
         });
     }
 
+    public static void shuffle(Object[] array, Object[] expected)
+    {
+        Random rnd = new Random();
+        int size = array.length;
+        for (int i = size; i > 1; i--)
+        {
+            int rdi = rnd.nextInt(i);
+            swap(array, i - 1, rdi);
+            swap(expected, i - 1, rdi);
+        }
+    }
+
+    private static void swap(Object[] arr, int i, int j)
+    {
+        Object tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+
     public static void main(String[] args)
     {
-        Value a = new Value(2);
-        Value b = new Value(3);
-        Value c = new Value(5);
-        Value d = a.mul(b).plus(c);
-        Value e = d.pow(2);
-        Value f = e.relu();
-        NNUtil.graphviz(f);
+        Value x1 = new Value("x1", 2);
+        Value x2 = new Value("x2", 0);
+        Value w1 = new Value("w1", -3);
+        Value w2 = new Value("w2", 1);
+        Value b = new Value("b", 6.8813735870195432);
+        //        Value b = new Value("b", 8);
+        Value x1w1 = x1.mul(w1, "");
+        Value x2w2 = x2.mul(w2, "");
+        Value x1w1x2w1 = x1w1.plus(x2w2, "");
+        Value n = x1w1x2w1.plus(b, "n");
+        Value o = n.tanh().label("o");
+        o.retroPropagate();
+        NNUtil.graphviz(o);
     }
 }

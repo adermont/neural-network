@@ -5,7 +5,7 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static com.github.adermont.neuralnetwork.base.ActivationFunction.*;
+import static com.github.adermont.neuralnetwork.math.DerivableFunction.*;
 
 public class GraphDemo
 {

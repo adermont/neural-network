@@ -4,88 +4,137 @@ import com.github.adermont.neuralnetwork.layer.CollectorLayer;
 import com.github.adermont.neuralnetwork.layer.DataLayer;
 import com.github.adermont.neuralnetwork.layer.DenseLayer;
 import com.github.adermont.neuralnetwork.layer.NeuralLayer;
+import com.github.adermont.neuralnetwork.math.DerivableFunction;
+import com.github.adermont.neuralnetwork.math.Value;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.Optional;
-import java.util.function.DoubleUnaryOperator;
+import java.util.*;
 
 public class NeuralNetwork
 {
-    private double[]           inputValues;
-    private double[][]         outputValues;
+    private int                inputDim;
+    private Value[]            output;
     private DataLayer          inputLayer;
-    private Deque<NeuralLayer> neuralLayers;
+    private Deque<NeuralLayer> hiddenLayers;
     private CollectorLayer     outputLayer;
+
+    private Value lossOfCurrentBatch;
+    private int   currentBatch; // numero de batch courant
+    private int   maxBatch; // Nombre max de batches
 
     public NeuralNetwork(int inputDim)
     {
-        neuralLayers = new ArrayDeque<>();
+        this.inputDim = inputDim;
+        this.hiddenLayers = new ArrayDeque<>();
+        this.lossOfCurrentBatch = new Value("loss", 0);
 
         double[] firstLayerValues = new double[inputDim];
-        inputLayer = new DataLayer(firstLayerValues);
-        Optional.ofNullable(neuralLayers.peekFirst()).ifPresent(dense -> dense.connect(inputLayer));
+        this.inputLayer = new DataLayer(firstLayerValues);
+        Optional.ofNullable(hiddenLayers.peekFirst()).ifPresent(dense -> dense.connect(inputLayer));
     }
 
-    protected void setInput(double[] input)
+    private void initLayer(NeuralLayer dense)
     {
-        inputValues = input;
+        NeuralLayer previous = null;
+        if (hiddenLayers.peekLast() == null)
+        {
+            previous = inputLayer;
+        }
+        else
+        {
+            previous = hiddenLayers.peekLast();
+        }
+        dense.connect(previous);
+
+        double[][] weights = new double[dense.getNeuronCount()][];
+        for (int i = 0; i < weights.length; i++)
+        {
+            weights[i] = new Random().doubles(previous.getNeuronCount(), -1, 1).toArray();
+        }
+        dense.setWeights(weights);
+        double[] bias = new double[dense.getNeuronCount()];
+        for (int i = 0; i < bias.length; i++)
+        {
+            bias[i] = new Random().nextDouble(-1, 1);
+        }
+        dense.setBias(bias);
     }
 
-    public DenseLayer addDenseLayer(int nbNeurons, ActivationFunction pFunction)
+    public DenseLayer addDenseLayer(int nbNeurons, DerivableFunction pFunction)
     {
-        DenseLayer layer = new DenseLayer(nbNeurons, pFunction);
-        Optional.ofNullable(neuralLayers.peekLast())
-                .ifPresentOrElse(dense -> layer.connect(dense), () -> layer.connect(inputLayer));
-
-        neuralLayers.add(layer);
-        return layer;
+        DenseLayer dense = new DenseLayer(nbNeurons, pFunction);
+        initLayer(dense);
+        hiddenLayers.add(dense);
+        return dense;
     }
 
-    public CollectorLayer setCollectorLayer(int nbNeurons, ActivationFunction pFunction)
+    public CollectorLayer setCollectorLayer(int nbNeurons, DerivableFunction pFunction)
     {
         CollectorLayer collector = new CollectorLayer(nbNeurons, pFunction);
-        Optional.ofNullable(neuralLayers.peekLast())
-                .ifPresentOrElse(dense -> collector.connect(dense),
-                                 () -> collector.connect(inputLayer));
-        outputLayer = collector;
-        return collector;
+        initLayer(collector);
+        return outputLayer = collector;
     }
 
-    public void predict(double[] pX)
+    public Value[] predict(double[] pX)
     {
-        setInput(pX);
-
-        double[][] output = new double[inputValues.length][];
-        int iOut = 0;
-        for (double inputValue : inputValues)
+        for (Neuron neuron : inputLayer.getNeurons())
         {
-            for (Neuron neuron : inputLayer.getNeurons())
-            {
-                ((DataNeuron)neuron).setData(new double[]{inputValue});
-            }
-            inputLayer.propagate();
-            output[iOut++] = outputLayer.getOutput().get();
+            ((DataNeuron) neuron).setData(pX);
         }
-
-        this.outputValues = output;
-
+        inputLayer.propagate();
+        return this.output = outputLayer.getOutput();
     }
 
-    public double[] getFlattenOutput()
+    public void nextBatch(int pNB_BATCH)
     {
-        if (outputLayer.getNeurons().length > 1)
+        this.currentBatch++;
+        this.maxBatch = pNB_BATCH;
+        this.lossOfCurrentBatch = new Value("loss@" + currentBatch, 0);
+        this.outputLayer.resetGradients();
+    }
+
+    public Value learn(double[] pX, double[] pY)
+    {
+        Value[] prediction = predict(pX);
+        for (int i = 0; i < pY.length; i++)
         {
-            throw new UnsupportedOperationException("Flatten only works with collector layer having only 1 neuron");
+            String sBatch = "batch" + currentBatch;
+            Value expected = new Value(sBatch + ".xpct" + i, pY[i]);
+            Value diff = expected.minus(prediction[i]).label(sBatch + ".diff" + i);
+            lossOfCurrentBatch = lossOfCurrentBatch.plus(diff.pow(2)).label(sBatch + ".loss" + i);
         }
-        return Arrays.stream(outputValues)
-              .flatMapToDouble(Arrays::stream)
-              .toArray();
+        return lossOfCurrentBatch;
     }
 
-    public double[][] getOutput()
+    public Value[] getOutput()
     {
-        return outputValues;
+        return output;
+    }
+
+    public List<Value> parameters()
+    {
+        List<Value> result = new ArrayList<>();
+        hiddenLayers.forEach(layer -> result.addAll(layer.parameters()));
+        result.addAll(outputLayer.parameters());
+        return result;
+    }
+
+    public void updateWeights()
+    {
+        updateWeights(0.01, true);
+    }
+
+    public void updateWeights(double pStep, boolean optimize)
+    {
+        if (optimize)
+        {
+            pStep = 1.0 - 0.9 * currentBatch / maxBatch;
+            //System.out.println("- Updating weights, learning rate=" + pStep);
+        }
+        lossOfCurrentBatch.retroPropagate();
+        List<Value> parameters = parameters();
+        for (Value parameter : parameters)
+        {
+            parameter.update(pStep);
+        }
     }
 }

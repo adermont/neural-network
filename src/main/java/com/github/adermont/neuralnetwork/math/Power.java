@@ -23,9 +23,10 @@ public class Power extends BinaryFunction
      *
      * @return
      */
-    public Number derivative(){
-        return (other.data.doubleValue() * Math.pow(self.data.doubleValue(),
-                                                    other.data.doubleValue() - 1));
+    public Number derivative()
+    {
+        return (other.data.doubleValue() * StrictMath.pow(self.data.doubleValue(),
+                                                          other.data.doubleValue() - 1));
     }
 
 }

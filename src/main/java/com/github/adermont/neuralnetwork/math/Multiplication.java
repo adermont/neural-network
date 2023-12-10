@@ -13,7 +13,8 @@ public class Multiplication extends BinaryFunction
         return left * right;
     }
 
-    public void backward(){
+    public void backward()
+    {
         self.grad += other.data.doubleValue() * this.grad;
         other.grad += self.data.doubleValue() * this.grad;
     }

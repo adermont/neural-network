@@ -13,6 +13,7 @@ public class Addition extends BinaryFunction
         return left + right;
     }
 
+    @Override
     public void backward()
     {
         self.grad += this.grad;

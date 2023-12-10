@@ -1,42 +1,36 @@
 package com.github.adermont.neuralnetwork.math;
 
-import com.github.adermont.neuralnetwork.base.ActivationFunction;
-
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
 public class UnaryFunction extends Value implements DoubleUnaryOperator
 {
-    protected String             label;
-    protected Value              self;
-    protected ActivationFunction function;
+    protected String            label;
+    protected Value             operand;
+    protected DerivableFunction function;
 
     public UnaryFunction(String label, Value left)
     {
         super(0.0);
         this.label = label;
-        this.self = left;
+        this.operand = left;
         this.data = data();
     }
 
-    public UnaryFunction(String label, Value left, ActivationFunction function)
+    public UnaryFunction(String label, Value data, DerivableFunction function)
     {
         super(0.0);
         this.label = label;
-        this.self = left;
+        this.operand = data;
         this.function = function;
-        this.data = data();
-    }
-
-    public Number data()
-    {
-        double v = self.data.doubleValue();
-        return function == null ? applyAsDouble(v) : function.applyAsDouble(v);
+        this.data = applyAsDouble(operand.data.doubleValue());
     }
 
     @Override
     public double applyAsDouble(double operand)
     {
-        return data.doubleValue();
+        return this.function == null ? data.doubleValue() : function.applyAsDouble(operand);
     }
 
     public String operator()
@@ -45,8 +39,17 @@ public class UnaryFunction extends Value implements DoubleUnaryOperator
     }
 
     @Override
-    public Value[] children()
+    public List<Value> children()
     {
-        return new Value[]{self};
+        return Arrays.asList(operand);
+    }
+
+    public void resetGradient()
+    {
+        super.resetGradient();
+        for (Value child : children())
+        {
+            child.resetGradient();
+        }
     }
 }
