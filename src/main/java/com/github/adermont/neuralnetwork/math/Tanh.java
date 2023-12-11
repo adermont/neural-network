@@ -8,8 +8,6 @@ public class Tanh implements DerivableFunction
     public double applyAsDouble(double x)
     {
         return StrictMath.tanh(x);
-//        double exp2x = StrictMath.exp(2 * x);
-//        return (exp2x - 1) / (exp2x + 1);
     }
 
     @Override

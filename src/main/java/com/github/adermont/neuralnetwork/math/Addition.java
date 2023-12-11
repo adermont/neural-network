@@ -14,7 +14,7 @@ public class Addition extends BinaryFunction
     }
 
     @Override
-    public void backward()
+    protected void backward()
     {
         self.grad += this.grad;
         other.grad += this.grad;

@@ -68,7 +68,7 @@ public class Value extends Number
         return null;
     }
 
-    public void backward()
+    protected void backward()
     {
         // does nothing
     }
@@ -105,7 +105,7 @@ public class Value extends Number
 
     public Value mul(Value other, String label)
     {
-        return new Multiplication(this, other).label(label);
+        return other != null ? new Multiplication(this, other).label(label) : this;
     }
 
     public Value mul(Value other)
@@ -120,7 +120,7 @@ public class Value extends Number
 
     public Value plus(Value other, String label)
     {
-        return new Addition(this, other).label(label);
+        return other != null ? new Addition(this, other).label(label) : this;
     }
 
     public Value plus(Value other)

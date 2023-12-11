@@ -7,9 +7,9 @@ import com.github.adermont.neuralnetwork.base.Neuron;
 public class DataLayer extends NeuralLayer
 {
 
-    public DataLayer(double[] pData)
+    public DataLayer(int inputDim)
     {
-        super(pData.length, DerivableFunction.IDENTITY);
+        super(inputDim, DerivableFunction.IDENTITY);
     }
 
     @Override

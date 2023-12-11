@@ -33,6 +33,7 @@ public class UnaryFunction extends Value implements DoubleUnaryOperator
         return this.function == null ? data.doubleValue() : function.applyAsDouble(operand);
     }
 
+    @Override
     public String operator()
     {
         return label;
@@ -44,6 +45,7 @@ public class UnaryFunction extends Value implements DoubleUnaryOperator
         return Arrays.asList(operand);
     }
 
+    @Override
     public void resetGradient()
     {
         super.resetGradient();

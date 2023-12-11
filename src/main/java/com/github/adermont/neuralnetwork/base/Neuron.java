@@ -108,11 +108,6 @@ public class Neuron
         this.output = new ActivationFunction(sum, this.function);
     }
 
-    public void backward()
-    {
-        this.output.backward();
-    }
-
     public double getOutputAsDouble()
     {
         return getOutput().data().doubleValue();

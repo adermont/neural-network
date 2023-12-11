@@ -8,7 +8,7 @@ public class ActivationFunction extends UnaryFunction
     }
 
     @Override
-    public void backward()
+    protected void backward()
     {
         operand.addGradient(function.derivative().applyAsDouble(data.doubleValue()) * this.grad);
     }

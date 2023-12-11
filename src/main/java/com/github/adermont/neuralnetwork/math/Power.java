@@ -13,16 +13,12 @@ public class Power extends BinaryFunction
         return Math.pow(left, right);
     }
 
-    public void backward()
+    @Override
+    protected void backward()
     {
         self.grad += derivative().doubleValue() * this.grad;
     }
 
-    /**
-     * Dérivée de X^n = n.X^(n-1)
-     *
-     * @return
-     */
     public Number derivative()
     {
         return (other.data.doubleValue() * StrictMath.pow(self.data.doubleValue(),
