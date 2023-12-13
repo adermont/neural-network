@@ -1,7 +1,7 @@
 package com.github.adermont.neuralnetwork.layer;
 
 import com.github.adermont.neuralnetwork.base.Neuron;
-import com.github.adermont.neuralnetwork.math.DerivableFunction;
+import com.github.adermont.neuralnetwork.base.NeuronFunctions;
 import com.github.adermont.neuralnetwork.math.Value;
 
 import java.util.ArrayList;
@@ -11,22 +11,25 @@ import java.util.Optional;
 
 public abstract class NeuralLayer
 {
-    private Neuron[] neurons;
-    private NeuralLayer previousLayer;
-    private NeuralLayer nextLayer;
+    private Neuron[]        neurons;
+    private NeuralLayer     previousLayer;
+    private NeuralLayer     nextLayer;
+    protected NeuronFunctions functions;
+    private double          output;
 
-    public NeuralLayer(int nbNeurons, DerivableFunction pFunction)
+    public NeuralLayer(int nbNeurons, NeuronFunctions pFunctions)
     {
         neurons = new Neuron[nbNeurons];
+        functions = pFunctions;
         for (int i = 0; i < neurons.length; i++)
         {
-            neurons[i] = createNeuron(i, pFunction);
+            neurons[i] = createNeuron(i, pFunctions);
         }
     }
 
-    protected Neuron createNeuron(int id, DerivableFunction pFunction)
+    protected Neuron createNeuron(int id, NeuronFunctions pFunction)
     {
-        return new Neuron(id, pFunction);
+        return new Neuron(this, id, pFunction);
     }
 
     public Neuron[] getNeurons()
@@ -62,8 +65,25 @@ public abstract class NeuralLayer
 
     public void propagate()
     {
-        Arrays.stream(getNeurons()).forEach(n -> n.act());
+        // Preactivation
+        for (int i = 0; i < neurons.length; i++)
+        {
+            Neuron n = neurons[i];
+            Value preact = functions.preactivation().apply(n);
+            n.setPreactivation(preact);
+        }
+
+        // Activation
+        functions.layerActivation().apply(this);
+
+        sumOutput();
+
         getNextLayer().ifPresent(layer -> layer.propagate());
+    }
+
+    private void sumOutput()
+    {
+        //this.output = Arrays.stream(getNeurons()).mapToDouble(Neuron::getOutputAsDouble).sum();
     }
 
     public void setWeights(double[][] pWeights)

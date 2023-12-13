@@ -1,14 +1,14 @@
 package com.github.adermont.neuralnetwork.layer;
 
 import com.github.adermont.neuralnetwork.base.Neuron;
-import com.github.adermont.neuralnetwork.math.DerivableFunction;
+import com.github.adermont.neuralnetwork.base.NeuronFunctions;
 
 import java.util.Arrays;
 
 public class DenseLayer extends NeuralLayer
 {
 
-    public DenseLayer(int nbNeurons, DerivableFunction pFunction)
+    public DenseLayer(int nbNeurons, NeuronFunctions pFunction)
     {
         super(nbNeurons, pFunction);
     }

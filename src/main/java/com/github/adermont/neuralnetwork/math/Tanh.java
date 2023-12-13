@@ -2,19 +2,24 @@ package com.github.adermont.neuralnetwork.math;
 
 import java.util.function.DoubleUnaryOperator;
 
-public class Tanh implements DerivableFunction
+public class Tanh extends UnaryFunction implements DoubleUnaryOperator
 {
-    @Override
-    public double applyAsDouble(double x)
+    public Tanh(Value operand)
     {
-        return StrictMath.tanh(x);
+        super("tanh", operand);
+        this.data = applyAsDouble(operand.doubleValue());
     }
 
     @Override
-    public DoubleUnaryOperator derivative()
+    public double applyAsDouble(double operand)
     {
-        return x -> {
-            return 1.0 - x * x;
-        };
+        return StrictMath.tanh(operand);
     }
+
+    @Override
+    protected double derivative()
+    {
+        return 1 - (this.data.doubleValue() * this.data.doubleValue());
+    }
+
 }

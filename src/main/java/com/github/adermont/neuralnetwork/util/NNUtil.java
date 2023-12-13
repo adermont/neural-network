@@ -20,6 +20,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.DoubleStream;
 
@@ -28,30 +29,92 @@ import static guru.nidi.graphviz.model.Factory.node;
 
 public class NNUtil
 {
-    public static double[] rangeX(double start, double end, int nbValues)
+    // Manually starts the JavaFX platform, just in case we are running in headless mode
+    static
+    {
+        try
+        {
+            Platform.startup(() -> {
+            });
+        }
+        catch (Exception ignored)
+        {
+        }
+    }
+
+    public static double[] range(double start, double end, int nbValues)
     {
         double step = (end - start) / (nbValues - 1);
         return DoubleStream.iterate(start, n -> n + step).limit((long) ((end - start) / step) + 1)
                            .toArray();
     }
 
-    public static void plot(String title, double[] x, double[] y)
+    public static double[][] range2dim(double start, double end, int nbValues)
     {
-        Platform.startup(() -> {
-            Graph graph = new Graph();
-            graph.plot(title, x, y);
+        double step = (end - start) / (nbValues - 1);
+        double[] doubles = DoubleStream.iterate(start, n -> n + step)
+                                       .limit((long) ((end - start) / step) + 1).toArray();
+        double[][] result = new double[doubles.length][];
+        for (int i = 0; i < doubles.length; i++)
+        {
+            result[i] = new double[]{doubles[i]};
+        }
+        return result;
+    }
 
+    public static void plot(String title, List<Double>... series)
+    {
+        Platform.runLater(() -> {
+            Graph graph = new Graph();
             graph.getXAxis().setAutoRanging(true);
             graph.getYAxis().setAutoRanging(true);
             graph.setCreateSymbols(true);
 
+            int iSerie = 1;
+            for (List<Double> values : series)
+            {
+                double[] x = range(1, values.size(), values.size());
+                double[] y = values.stream().mapToDouble(Double::doubleValue).toArray();
+                graph.plot(title + iSerie, x, y);
+                iSerie++;
+            }
+
+            showGraph(graph);
+        });
+    }
+
+    private static void showGraph(Graph g)
+    {
+        Platform.runLater(() -> {
             Stage stage = new Stage();
-            Scene scene = new Scene(graph, 800, 600);
+            Scene scene = new Scene(g, 800, 600);
             scene.getStylesheets().add(GraphDemo.class.getResource("style.css").toExternalForm());
 
             stage.setTitle("Graphe");
             stage.setScene(scene);
             stage.show();
+        });
+    }
+
+    public static void plot(String title, double[] y)
+    {
+        double[] x = range(1, y.length, y.length);
+        plot(title, x, y);
+    }
+
+    public static void plot(String title, double[] x, double[]... ySeries)
+    {
+        Platform.runLater(() -> {
+            Graph graph = new Graph();
+            for (double[] y : ySeries)
+            {
+                graph.plot(title, x, y);
+            }
+            graph.getXAxis().setAutoRanging(true);
+            graph.getYAxis().setAutoRanging(true);
+            graph.setCreateSymbols(true);
+
+            showGraph(graph);
         });
     }
 
@@ -112,7 +175,7 @@ public class NNUtil
                 @Override
                 public void keyTyped(KeyEvent e)
                 {
-                    v.retroPropagate();
+                    v.backPropagation();
                     guru.nidi.graphviz.model.Graph g = buildGraphModel(v);
                     BufferedImage image = Graphviz.fromGraph(g).width(1024).render(Format.PNG)
                                                   .toImage();
@@ -145,22 +208,5 @@ public class NNUtil
         Object tmp = arr[i];
         arr[i] = arr[j];
         arr[j] = tmp;
-    }
-
-    public static void main(String[] args)
-    {
-        Value x1 = new Value("x1", 2);
-        Value x2 = new Value("x2", 0);
-        Value w1 = new Value("w1", -3);
-        Value w2 = new Value("w2", 1);
-        Value b = new Value("b", 6.8813735870195432);
-        //        Value b = new Value("b", 8);
-        Value x1w1 = x1.mul(w1, "");
-        Value x2w2 = x2.mul(w2, "");
-        Value x1w1x2w1 = x1w1.plus(x2w2, "");
-        Value n = x1w1x2w1.plus(b, "n");
-        Value o = n.tanh().label("o");
-        o.retroPropagate();
-        NNUtil.graphviz(o);
     }
 }

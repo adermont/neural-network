@@ -2,8 +2,14 @@ package com.github.adermont.neuralnetwork.math;
 
 import java.util.function.DoubleUnaryOperator;
 
-public class Relu implements DerivableFunction
+public class Relu extends UnaryFunction implements DoubleUnaryOperator
 {
+    public Relu(Value operand)
+    {
+        super("relu", operand);
+        this.data = applyAsDouble(operand.doubleValue());
+    }
+
     @Override
     public double applyAsDouble(double operand)
     {
@@ -11,8 +17,9 @@ public class Relu implements DerivableFunction
     }
 
     @Override
-    public DoubleUnaryOperator derivative()
+    protected double derivative()
     {
-        return x -> x < 0.0 ? 0.0 : 1.0;
+        return this.data.doubleValue() < 0 ? 0.0 : 1.0;
     }
+
 }

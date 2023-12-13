@@ -21,7 +21,8 @@ public abstract class BinaryFunction extends Value implements DoubleBinaryOperat
 
     public BinaryFunction(String op, Value left, Value right)
     {
-        this(left.label + op + right.label, op, left, right);
+//        this(left.label + op + right.label, op, left, right);
+        this(null, op, left, right);
     }
 
     public String operator()

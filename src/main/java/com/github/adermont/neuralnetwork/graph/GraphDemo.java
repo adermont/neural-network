@@ -1,11 +1,10 @@
 package com.github.adermont.neuralnetwork.graph;
 
+import com.github.adermont.neuralnetwork.base.NeuronFunctions;
 import com.github.adermont.neuralnetwork.util.NNUtil;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import static com.github.adermont.neuralnetwork.math.DerivableFunction.*;
 
 public class GraphDemo
 {
@@ -16,16 +15,16 @@ public class GraphDemo
         int nbValues = 1000;
         double start = -10, end = 10;
 
-        double[] x = NNUtil.rangeX(start, end, nbValues);
+        double[] x = NNUtil.range(start, end, nbValues);
 
         Platform.startup(() -> {
             Graph graph = new Graph();
-            graph.plot("TANH", x, TANH);
-            graph.plot("SIGMA", x, SIGMA);
-            graph.plot("RELU", x, RELU);
-            graph.plot("IDENTITY", x, IDENTITY);
-            graph.plot("HEAVISIDE", x, HEAVISIDE);
-            graph.plot("RELU o TANH", x, TANH.compose(RELU));
+//            graph.plot("TANH", x, NeuronFunctions.TANH);
+//            graph.plot("SIGMA", x, SIGMOID);
+//            graph.plot("RELU", x, RELU);
+//            graph.plot("IDENTITY", x, IDENTITY);
+//            graph.plot("HEAVISIDE", x, HEAVISIDE);
+//            graph.plot("RELU o TANH", x, TANH.compose(RELU));
 
             graph.getXAxis().setAutoRanging(false);
             graph.getYAxis().setAutoRanging(false);

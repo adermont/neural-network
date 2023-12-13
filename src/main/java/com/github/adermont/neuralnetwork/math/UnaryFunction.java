@@ -4,39 +4,27 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
-public class UnaryFunction extends Value implements DoubleUnaryOperator
+public abstract class UnaryFunction extends Value implements DoubleUnaryOperator
 {
-    protected String            label;
-    protected Value             operand;
-    protected DerivableFunction function;
+    protected Value  operand;
+    protected String operator;
 
-    public UnaryFunction(String label, Value left)
+    public UnaryFunction(String label, String op, Value operand)
     {
-        super(0.0);
-        this.label = label;
-        this.operand = left;
-        this.data = data();
-    }
-
-    public UnaryFunction(String label, Value data, DerivableFunction function)
-    {
-        super(0.0);
-        this.label = label;
-        this.operand = data;
-        this.function = function;
+        super(label, 0.0);
+        this.operator = op;
+        this.operand = operand;
         this.data = applyAsDouble(operand.data.doubleValue());
     }
 
-    @Override
-    public double applyAsDouble(double operand)
+    public UnaryFunction(String op, Value operand)
     {
-        return this.function == null ? data.doubleValue() : function.applyAsDouble(operand);
+        this(op, op, operand);
     }
 
-    @Override
     public String operator()
     {
-        return label;
+        return operator;
     }
 
     @Override
@@ -45,7 +33,14 @@ public class UnaryFunction extends Value implements DoubleUnaryOperator
         return Arrays.asList(operand);
     }
 
+    protected abstract double derivative();
+
     @Override
+    protected void backward()
+    {
+        this.operand.addGradient(derivative() * this.grad);
+    }
+
     public void resetGradient()
     {
         super.resetGradient();

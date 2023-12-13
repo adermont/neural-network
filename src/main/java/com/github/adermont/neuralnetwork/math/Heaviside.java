@@ -2,8 +2,14 @@ package com.github.adermont.neuralnetwork.math;
 
 import java.util.function.DoubleUnaryOperator;
 
-public class Heaviside implements DerivableFunction
+public class Heaviside extends UnaryFunction implements DoubleUnaryOperator
 {
+    public Heaviside(Value operand)
+    {
+        super("heaviside", operand);
+        this.data = applyAsDouble(operand.doubleValue());
+    }
+
     @Override
     public double applyAsDouble(double operand)
     {
@@ -11,8 +17,9 @@ public class Heaviside implements DerivableFunction
     }
 
     @Override
-    public DoubleUnaryOperator derivative()
+    protected double derivative()
     {
-        return x -> 0.0;
+        return 0.0;
     }
+
 }

@@ -1,40 +1,56 @@
 package com.github.adermont.neuralnetwork.base;
 
-import com.github.adermont.neuralnetwork.math.ActivationFunction;
-import com.github.adermont.neuralnetwork.math.DerivableFunction;
+import com.github.adermont.neuralnetwork.layer.NeuralLayer;
 import com.github.adermont.neuralnetwork.math.Value;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Neuron
 {
-    private   DerivableFunction function;
-    private   int               neuronId;
-    private   Neuron[]          inputs;
-    private   Value[]           weights;
-    private   Value             bias;
-    protected Value             output;
+    private   NeuralLayer     layer;
+    private   NeuronFunctions function;
+    private   int             neuronId;
+    private   Neuron[]        inputs;
+    private   Value[]         weights;
+    private   Value           bias;
+    protected Value           output;
+    protected Value           preactivation;
 
-    public Neuron(int pNeuronId, DerivableFunction pFunction)
+    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction)
     {
-        function = pFunction;
-        neuronId = pNeuronId;
-        bias = new Value("n" + neuronId + ".b", 0);
+        this.layer = layer;
+        this.function = pFunction;
+        this.neuronId = pNeuronId;
+        this.bias = new Value("n" + neuronId + ".b", 0);
     }
 
-    public Neuron(int pNeuronId, DerivableFunction pFunction, double[] pWeights, double pBias)
+    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction, double[] pWeights,
+                  double pBias)
     {
-        this(pNeuronId, pFunction);
+        this(layer, pNeuronId, pFunction);
         setWeights(pWeights);
         setBias(pBias);
     }
 
-    public Neuron(int pNeuronId, DerivableFunction pFunction, double[] pWeights)
+    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction, double[] pWeights)
     {
-        this(pNeuronId, pFunction, pWeights, new Random().nextDouble(-1, 1));
+        this(layer, pNeuronId, pFunction, pWeights, new Random().nextDouble(-1, 1));
+    }
+
+    public Value getPreactivation()
+    {
+        return preactivation;
+    }
+
+    public void setPreactivation(Value p)
+    {
+        preactivation = p;
+    }
+
+    public int getNeuronId()
+    {
+        return this.neuronId;
     }
 
     public Neuron[] getInputs()
@@ -47,7 +63,12 @@ public class Neuron
         this.inputs = pInputs;
     }
 
-    public double[] getWeights()
+    public Value[] getWeights()
+    {
+        return this.weights;
+    }
+
+    public double[] getWeightsAsDouble()
     {
         return Arrays.stream(this.weights).mapToDouble(Value::doubleValue).toArray();
     }
@@ -63,49 +84,25 @@ public class Neuron
 
     public List<Value> parameters()
     {
-        List<Value> result = new ArrayList<>();
-        for (Value weight : this.weights)
-        {
-            result.add(weight);
-        }
-        result.add(this.bias);
-        return result;
+        List<Value> values = Arrays.stream(weights).collect(Collectors.toList());
+        values.add(bias);
+        return values;
     }
 
-    public double getBias()
+    public NeuralLayer layer()
     {
-        return bias.doubleValue();
+        return this.layer;
+    }
+
+    public Value getBias()
+    {
+        return bias;
     }
 
     public void setBias(double pBias)
     {
         this.bias.set(pBias);
         this.bias.resetGradient();
-    }
-
-    public int getNeuronId()
-    {
-        return this.neuronId;
-    }
-
-    public void act()
-    {
-        Value sum = null;
-        for (int i = 0; i < this.inputs.length; i++)
-        {
-            Value mul = this.inputs[i].getOutput().mul(this.weights[i]);
-            if (sum != null)
-            {
-                sum = sum.plus(mul);
-            }
-            else
-            {
-                sum = mul;
-            }
-        }
-        sum = sum.plus(this.bias);
-
-        this.output = new ActivationFunction(sum, this.function);
     }
 
     public double getOutputAsDouble()
@@ -116,5 +113,10 @@ public class Neuron
     public Value getOutput()
     {
         return this.output;
+    }
+
+    public void setOutput(Value pOutput)
+    {
+        this.output = pOutput;
     }
 }

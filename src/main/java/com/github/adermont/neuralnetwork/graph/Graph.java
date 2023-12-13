@@ -28,7 +28,7 @@ public class Graph extends LineChart<Number, Number>
 
     public void plot(String seriesName, double[] x, double[] y)
     {
-        System.out.printf("%s => %s", Arrays.toString(x), Arrays.toString(y));
+        //System.out.printf("%s => %s", Arrays.toString(x), Arrays.toString(y));
 
         XYChart.Series series = new XYChart.Series();
         series.setName(seriesName);

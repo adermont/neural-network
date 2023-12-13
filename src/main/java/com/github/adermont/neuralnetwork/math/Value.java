@@ -1,12 +1,9 @@
 package com.github.adermont.neuralnetwork.math;
 
 import java.util.*;
-import java.util.function.DoubleUnaryOperator;
 
 public class Value extends Number
 {
-    protected static DoubleUnaryOperator inertialFunction = new Sigmoid();
-
     protected String label;
     protected Number data;
     protected double grad;
@@ -73,7 +70,7 @@ public class Value extends Number
         // does nothing
     }
 
-    public void retroPropagate()
+    public void backPropagation()
     {
         resetGradient();
         this.grad = 1;
@@ -168,59 +165,28 @@ public class Value extends Number
         return new Multiplication(this, new Value(other).pow(-1));
     }
 
-    public Value relu()
+    public Value exp()
     {
-        return relu(this);
-    }
-
-    public Value sigmoid()
-    {
-        return sigmoid(this);
-    }
-
-    public Value linear()
-    {
-        return linear(this);
-    }
-
-    public Value heaviside()
-    {
-        return heaviside(this);
+        return new Exponential(this);
     }
 
     public Value tanh()
     {
-        return tanh(this);
+        return new Tanh(this);
     }
 
-    public static Value relu(Value v)
+    public Value heaviside()
     {
-        return new ActivationFunction(v, new Relu());
+        return new Heaviside(this);
+    }
+    public Value relu()
+    {
+        return new Tanh(this);
     }
 
-    public static Value sigmoid(Value v)
+    public void addGradient(Number pValue)
     {
-        return new ActivationFunction(v, new Sigmoid());
-    }
-
-    public static Value linear(Value v)
-    {
-        return new ActivationFunction(v, new Identity());
-    }
-
-    public static Value heaviside(Value v)
-    {
-        return new ActivationFunction(v, new Heaviside());
-    }
-
-    public static Value tanh(Value v)
-    {
-        return new ActivationFunction(v, new Tanh());
-    }
-
-    public void addGradient(double pValue)
-    {
-        this.grad += pValue;
+        this.grad += pValue.doubleValue();
     }
 
     public void resetGradient()
@@ -242,19 +208,19 @@ public class Value extends Number
     @Override
     public int intValue()
     {
-        return (int) data;
+        return data.intValue();
     }
 
     @Override
     public long longValue()
     {
-        return (long) data;
+        return data.longValue();
     }
 
     @Override
     public float floatValue()
     {
-        return (float) data;
+        return data.floatValue();
     }
 
     @Override
@@ -272,7 +238,8 @@ public class Value extends Number
         previousGradient = grad;
     }
 
-    public double previousGradient(){
+    public double previousGradient()
+    {
         return this.previousGradient;
     }
 }
