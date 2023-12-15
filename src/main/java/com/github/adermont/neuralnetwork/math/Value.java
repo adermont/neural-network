@@ -1,5 +1,8 @@
 package com.github.adermont.neuralnetwork.math;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.*;
 
 public class Value extends Number
@@ -7,7 +10,6 @@ public class Value extends Number
     protected String label;
     protected Number data;
     protected double grad;
-    protected double previousGradient = Double.NaN;
 
     public Value()
     {
@@ -235,11 +237,28 @@ public class Value extends Number
         {
             this.data = this.data.doubleValue() - step * grad;
         }
-        previousGradient = grad;
     }
 
-    public double previousGradient()
+    @Override
+    public boolean equals(Object pO)
     {
-        return this.previousGradient;
+        if (this == pO)
+        {
+            return true;
+        }
+
+        if (!(pO instanceof Value value))
+        {
+            return false;
+        }
+
+        return new EqualsBuilder().append(grad, value.grad).append(label, value.label)
+                                  .append(data, value.data).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).append(label).append(data).append(grad).toHashCode();
     }
 }

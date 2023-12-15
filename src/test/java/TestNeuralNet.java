@@ -127,13 +127,13 @@ public class TestNeuralNet
     {
         MnistDataset mnistDataset = new MnistDataset();
         Matrix[] matrices = mnistDataset.loadFromLocal(Path.of("D:", "Datasets", "mnist"));
-        double[][] x_train = mnistDataset.xtrain(1000);
-        double[][] y_train = mnistDataset.ytrain(1000);
+        double[][] x_train = mnistDataset.xtrain(5000);
+        double[][] y_train = mnistDataset.ytrain(5000);
 
         NeuralNet nn = new NeuralNet(x_train[0].length, 0.1);
 
         // Layer 1 : 100 neurons
-        nn.addDenseLayer(10, NeuronFunctions.RELU);
+        nn.addDenseLayer(20, NeuronFunctions.RELU);
         nn.addDenseLayer(20, NeuronFunctions.RELU);
         CollectorLayer collectorLayer = nn.setCollectorLayer(10, NeuronFunctions.SOFTMAX);
 
@@ -147,7 +147,7 @@ public class TestNeuralNet
 
         nn.summary();
 
-        final int NB_EPOCH = 10;
+        final int NB_EPOCH = 2;
         nn.fit(x_train, y_train, NB_EPOCH, 50);
 
         System.out.println("----------------------------------------------");
@@ -156,11 +156,10 @@ public class TestNeuralNet
         for (int xi = 0; xi < x_train.length; xi++)
         {
             Value[] p = nn.predict(x_train[xi]);
-            int classification = collectorLayer.getClassification(
-                    Arrays.stream(p).mapToDouble(Value::doubleValue).toArray());
+            int classification = collectorLayer.getOutputClass();
 
             double[] e = y_train[xi];
-            int classPred = collectorLayer.getClassification(e);
+            int classPred = collectorLayer.getClass(e);
 
             int l = Math.abs(classification - classPred) * 10;
             System.out.printf("Prediction %d : %d (expected=%d, ecart=%d%%)%n", xi, classPred,

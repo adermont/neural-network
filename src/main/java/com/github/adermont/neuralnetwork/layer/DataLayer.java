@@ -7,13 +7,13 @@ import com.github.adermont.neuralnetwork.base.Neuron;
 public class DataLayer extends NeuralLayer
 {
 
-    public DataLayer(int inputDim)
+    public DataLayer(int inputDim, NeuronFunctions functions)
     {
-        super(inputDim, NeuronFunctions.IDENTITY);
+        super(inputDim, functions);
     }
 
     @Override
-    protected Neuron createNeuron(int id, NeuronFunctions pFunction)
+    protected Neuron createNeuron(int id)
     {
         return new DataNeuron(this, id);
     }
@@ -24,4 +24,6 @@ public class DataLayer extends NeuralLayer
         functions.layerActivation().apply(this);
         getNextLayer().ifPresent(layer -> layer.propagate());
     }
+
+
 }

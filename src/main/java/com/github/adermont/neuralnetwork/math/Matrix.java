@@ -4,21 +4,21 @@ import java.util.Arrays;
 
 public class Matrix
 {
-    private int[] data;
+    private double[] data;
     private int   rowCount;
     private int   colCount;
     private int   label;
 
     public Matrix(int rowCount, int colCount)
     {
-        this.data = new int[rowCount * colCount];
+        this.data = new double[rowCount * colCount];
         this.rowCount = rowCount;
         this.colCount = colCount;
     }
 
     public double[] flatten()
     {
-        return Arrays.stream(data).asDoubleStream().toArray();
+        return data;
     }
 
     public int rowCount()
@@ -36,12 +36,12 @@ public class Matrix
         return this.rowCount * this.colCount;
     }
 
-    public int getValue(int r, int c)
+    public double getValue(int r, int c)
     {
         return this.data[r * this.colCount + c];
     }
 
-    public void set(int r, int c, int value)
+    public void set(int r, int c, double value)
     {
         this.data[r * this.colCount + c] = value;
     }

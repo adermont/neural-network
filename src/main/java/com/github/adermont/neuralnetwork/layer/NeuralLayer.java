@@ -3,6 +3,8 @@ package com.github.adermont.neuralnetwork.layer;
 import com.github.adermont.neuralnetwork.base.Neuron;
 import com.github.adermont.neuralnetwork.base.NeuronFunctions;
 import com.github.adermont.neuralnetwork.math.Value;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,13 +25,13 @@ public abstract class NeuralLayer
         functions = pFunctions;
         for (int i = 0; i < neurons.length; i++)
         {
-            neurons[i] = createNeuron(i, pFunctions);
+            neurons[i] = createNeuron(i);
         }
     }
 
-    protected Neuron createNeuron(int id, NeuronFunctions pFunction)
+    protected Neuron createNeuron(int id)
     {
-        return new Neuron(this, id, pFunction);
+        return new Neuron(this, id);
     }
 
     public Neuron[] getNeurons()
@@ -111,4 +113,33 @@ public abstract class NeuralLayer
         }
         return result;
     }
+
+    public NeuronFunctions functions()
+    {
+        return functions;
+    }
+
+    @Override
+    public boolean equals(Object pO)
+    {
+        if (this == pO)
+        {
+            return true;
+        }
+
+        if (!(pO instanceof NeuralLayer that))
+        {
+            return false;
+        }
+
+        return new EqualsBuilder().append(getNeurons(), that.getNeurons())
+                                  .append(functions, that.functions).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).append(getNeurons()).append(functions).toHashCode();
+    }
+
 }

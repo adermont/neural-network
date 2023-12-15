@@ -1,5 +1,8 @@
 package com.github.adermont.neuralnetwork.math;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.DoubleUnaryOperator;
@@ -48,5 +51,29 @@ public abstract class UnaryFunction extends Value implements DoubleUnaryOperator
         {
             child.resetGradient();
         }
+    }
+
+    @Override
+    public boolean equals(Object pO)
+    {
+        if (this == pO)
+        {
+            return true;
+        }
+
+        if (!(pO instanceof UnaryFunction that))
+        {
+            return false;
+        }
+
+        return new EqualsBuilder().appendSuper(super.equals(pO)).append(operand, that.operand)
+                                  .append(operator, that.operator).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(operand)
+                                          .append(operator).toHashCode();
     }
 }

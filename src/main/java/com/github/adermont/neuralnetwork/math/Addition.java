@@ -1,5 +1,7 @@
 package com.github.adermont.neuralnetwork.math;
 
+import com.github.adermont.neuralnetwork.base.BinaryFunction;
+
 public class Addition extends BinaryFunction
 {
     public Addition(Value pLeftOperand, Value pRightOperand)

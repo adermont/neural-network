@@ -2,40 +2,41 @@ package com.github.adermont.neuralnetwork.base;
 
 import com.github.adermont.neuralnetwork.layer.NeuralLayer;
 import com.github.adermont.neuralnetwork.math.Value;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class Neuron
 {
-    private   NeuralLayer     layer;
-    private   NeuronFunctions function;
-    private   int             neuronId;
-    private   Neuron[]        inputs;
-    private   Value[]         weights;
-    private   Value           bias;
-    protected Value           output;
-    protected Value           preactivation;
+    private   NeuralLayer layer;
+    private   int         neuronId;
+    private   Neuron[]    inputs;
+    private   Value[]     weights;
+    private   Value       bias;
+    protected Value       output;
+    protected Value       preactivation;
 
-    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction)
+    public Neuron(NeuralLayer layer, int pNeuronId)
     {
         this.layer = layer;
-        this.function = pFunction;
         this.neuronId = pNeuronId;
         this.bias = new Value("n" + neuronId + ".b", 0);
     }
 
-    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction, double[] pWeights,
-                  double pBias)
+    public Neuron(NeuralLayer layer, int pNeuronId, double[] pWeights, double pBias)
     {
-        this(layer, pNeuronId, pFunction);
+        this(layer, pNeuronId);
         setWeights(pWeights);
         setBias(pBias);
     }
 
-    public Neuron(NeuralLayer layer, int pNeuronId, NeuronFunctions pFunction, double[] pWeights)
+    public Neuron(NeuralLayer layer, int pNeuronId, double[] pWeights)
     {
-        this(layer, pNeuronId, pFunction, pWeights, new Random().nextDouble(-1, 1));
+        this(layer, pNeuronId, pWeights, new Random().nextDouble(-1, 1));
     }
 
     public Value getPreactivation()
@@ -51,6 +52,11 @@ public class Neuron
     public int getNeuronId()
     {
         return this.neuronId;
+    }
+
+    public void setId(int pNeuronId)
+    {
+        this.neuronId = pNeuronId;
     }
 
     public Neuron[] getInputs()
@@ -119,4 +125,29 @@ public class Neuron
     {
         this.output = pOutput;
     }
+
+    @Override
+    public boolean equals(Object pO)
+    {
+        if (this == pO)
+        {
+            return true;
+        }
+
+        if (!(pO instanceof Neuron neuron))
+        {
+            return false;
+        }
+        return new EqualsBuilder().append(getNeuronId(), neuron.getNeuronId())
+                                  .append(getWeights(), neuron.getWeights())
+                                  .append(getBias(), neuron.getBias()).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).append(getNeuronId()).append(getWeights())
+                                          .append(getBias()).toHashCode();
+    }
+
 }

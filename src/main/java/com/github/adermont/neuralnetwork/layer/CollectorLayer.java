@@ -3,10 +3,11 @@ package com.github.adermont.neuralnetwork.layer;
 import com.github.adermont.neuralnetwork.base.Neuron;
 import com.github.adermont.neuralnetwork.base.NeuronFunctions;
 import com.github.adermont.neuralnetwork.math.Value;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.stream.Streams;
 
 import java.util.Arrays;
-import java.util.OptionalDouble;
 
 public class CollectorLayer extends DenseLayer
 {
@@ -18,9 +19,9 @@ public class CollectorLayer extends DenseLayer
     }
 
     @Override
-    protected Neuron createNeuron(int id, NeuronFunctions pFunction)
+    protected Neuron createNeuron(int id)
     {
-        Neuron neuron = super.createNeuron(id, pFunction);
+        Neuron neuron = super.createNeuron(id);
         return neuron;
     }
 
@@ -37,6 +38,24 @@ public class CollectorLayer extends DenseLayer
         return output;
     }
 
+    public int getOutputClass()
+    {
+        double[] array = Arrays.stream(output).mapToDouble(Value::doubleValue).toArray();
+        return getClass(array);
+    }
+
+    public int getClass(double[] array)
+    {
+        double max = Arrays.stream(array).parallel().max().orElse(0.0);
+        for (int i = 0; i < array.length; i++)
+        {
+            if (array[i] == max) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public void resetGradients()
     {
         if (output != null)
@@ -48,15 +67,27 @@ public class CollectorLayer extends DenseLayer
         }
     }
 
-    public int getClassification(double[] pP)
+    @Override
+    public boolean equals(Object pO)
     {
-        double max = Arrays.stream(pP).max().orElse(0.0);
-        for (int i = 0; i < pP.length; i++)
+        if (this == pO)
         {
-            if (pP[i] == max) {
-                return i;
-            }
+            return true;
         }
-        return -1;
+
+        if (!(pO instanceof CollectorLayer that))
+        {
+            return false;
+        }
+
+        return new EqualsBuilder().appendSuper(super.equals(pO))
+                                  .append(getOutput(), that.getOutput()).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(getOutput())
+                                          .toHashCode();
     }
 }

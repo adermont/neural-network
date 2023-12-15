@@ -119,7 +119,7 @@ public class MnistDataset
                 {
                     for (int c = 0; c < nCols; c++)
                     {
-                        matrix.set(r, c, dataInputStream.readUnsignedByte());
+                        matrix.set(r, c, (double) dataInputStream.readUnsignedByte() / 255.);
                     }
                 }
                 data[i] = matrix;

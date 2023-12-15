@@ -9,8 +9,8 @@ public class DataNeuron extends Neuron
 
     public DataNeuron(NeuralLayer layer, int neuronId)
     {
-        super(layer, neuronId, NeuronFunctions.IDENTITY);
-        output = new Value("data" + neuronId, 0);
+        super(layer, neuronId);
+        output = new Value();
     }
 
     public void setData(double[] pData)

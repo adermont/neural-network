@@ -1,5 +1,7 @@
 package com.github.adermont.neuralnetwork.math;
 
+import com.github.adermont.neuralnetwork.base.BinaryFunction;
+
 public class Multiplication extends BinaryFunction
 {
     public Multiplication(Value pLeftOperand, Value pRightOperand)

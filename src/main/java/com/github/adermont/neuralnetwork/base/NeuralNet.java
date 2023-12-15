@@ -1,5 +1,6 @@
 package com.github.adermont.neuralnetwork.base;
 
+import com.github.adermont.neuralnetwork.io.NeuralNetSerializer;
 import com.github.adermont.neuralnetwork.layer.CollectorLayer;
 import com.github.adermont.neuralnetwork.layer.DataLayer;
 import com.github.adermont.neuralnetwork.layer.DenseLayer;
@@ -7,7 +8,11 @@ import com.github.adermont.neuralnetwork.layer.NeuralLayer;
 import com.github.adermont.neuralnetwork.math.LossFunction;
 import com.github.adermont.neuralnetwork.math.Value;
 import com.github.adermont.neuralnetwork.util.NNUtil;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -51,9 +56,9 @@ public class NeuralNet
     public NeuralNet(int inputDim, double defaultLearningRate)
     {
         this.inputDim = inputDim;
-        this.hiddenLayers = new ArrayDeque<>();
+        this.hiddenLayers = new LinkedList<>();
         this.parameters = new ArrayList<>();
-        this.inputLayer = new DataLayer(inputDim);
+        this.inputLayer = new DataLayer(inputDim, NeuronFunctions.IDENTITY);
         this.learningRate = defaultLearningRate;
         this.listeners = new ArrayList<>();
         this.lossFunction = LossFunction.MSE;
@@ -195,6 +200,16 @@ public class NeuralNet
     }
 
     /**
+     * Number of input vector's dimension.
+     *
+     * @return input vector dimension.
+     */
+    public int inputDim()
+    {
+        return inputDim;
+    }
+
+    /**
      * @return All the network parameters.
      */
     public List<Value> parameters()
@@ -207,10 +222,37 @@ public class NeuralNet
         return parameters;
     }
 
+    public NeuralLayer inputLayer()
+    {
+        return inputLayer;
+    }
+
+    public NeuralLayer outputLayer()
+    {
+        return outputLayer;
+    }
+
+    /**
+     * @return List of all net layers.
+     */
+    public List<NeuralLayer> hiddenLayers()
+    {
+        List<NeuralLayer> result = new ArrayList<>();
+        result.addAll(hiddenLayers);
+        return result;
+    }
+
+    /**
+     * @return The default learning rate (used only if batchCount > 10).
+     */
+    public double learningRate()
+    {
+        return learningRate;
+    }
+
     /**
      * Only tries to predict a value according to the current network's parameters. This method does
-     * not learn (to switch to learning mode, see
-     * {@link #fit(double[][], double[][], int, int)}.
+     * not learn (to switch to learning mode, see {@link #fit(double[][], double[][], int, int)}.
      * <p>
      * Note : see also the loss() function if you wan to estimate the loss level of this
      * prediction.
@@ -226,7 +268,7 @@ public class NeuralNet
             ((DataNeuron) neuron).setData(pX);
         }
         this.inputLayer.propagate();
-        return this.output = outputLayer.getOutput();
+        return this.output = this.outputLayer.getOutput();
     }
 
     /**
@@ -234,7 +276,7 @@ public class NeuralNet
      */
     private void fireTrainingStarted()
     {
-        listeners.forEach(l -> l.trainingStarted());
+        this.listeners.forEach(l -> l.trainingStarted());
     }
 
     /**
@@ -242,7 +284,7 @@ public class NeuralNet
      */
     private void fireTrainingTerminated()
     {
-        listeners.forEach(l -> l.trainingTerminated());
+        this.listeners.forEach(l -> l.trainingTerminated());
     }
 
     /**
@@ -413,8 +455,6 @@ public class NeuralNet
             // Predict output
             Value[] score = predict(x[i]);
 
-            //System.out.println(Arrays.toString(Arrays.stream(score).mapToDouble(n -> n.doubleValue()).toArray()));
-
             // Store prediction
             scores[i] = Arrays.stream(score).mapToDouble(Value::doubleValue).toArray();
 
@@ -444,15 +484,15 @@ public class NeuralNet
      */
     protected Value dataLoss(double[] expected, Value[] output)
     {
-        Value loss = new Value("", 0);
-        String sBatch = "batch" + currentBatch;
+        Value loss = null;
+        //String sBatch = "batch" + currentBatch;
 
         for (int i = 0; i < expected.length; i++)
         {
             Value expectedValue = new Value(expected[i]);//.label(sBatch + ".expect" + i);
             Value dataLoss = lossFunction().apply(expectedValue, output[i]);
 
-            loss = loss.plus(dataLoss);//.label(sBatch + ".loss" + i);
+            loss = dataLoss.plus(loss);//.label(sBatch + ".loss" + i);
         }
         return loss;
     }
@@ -470,7 +510,7 @@ public class NeuralNet
         {
             // Regularization
             Value alpha = new Value(0.0001);
-            Double sum = parameters().stream().map(v -> v.doubleValue())
+            Double sum = parameters().stream().map(p -> p.doubleValue())
                                      .reduce(0.0, (v1, v2) -> v1 + (v2 * v2));
             return alpha.mul(sum);
         }
@@ -485,7 +525,7 @@ public class NeuralNet
         // Optimize the learning rate : higher values in the beginning accelerates gradient descent
         if (batchCount >= 10)
         {
-            learningRate = 1.0 - (0.9 * ((double) (currentBatch+1) / (double) batchCount));
+            learningRate = 1.0 - (0.9 * ((double) (currentBatch + 1) / (double) batchCount));
             fireLearningRateChangedEvent(learningRate);
         }
 
@@ -493,11 +533,7 @@ public class NeuralNet
         loss.backPropagation();
 
         // Update parameters
-        List<Value> parameters = parameters();
-        for (Value parameter : parameters)
-        {
-            parameter.update(learningRate);
-        }
+        parameters().parallelStream().forEach(p -> p.update(learningRate));
     }
 
     public void summary()
@@ -521,6 +557,51 @@ public class NeuralNet
         System.out.println("Trainable params    : %d".formatted(parameters().size()));
         System.out.println("Non-trainable params: %d".formatted(parameters().size()));
         System.out.println();
+    }
+
+    @Override
+    public boolean equals(Object pO)
+    {
+        if (this == pO)
+        {
+            return true;
+        }
+
+        if (!(pO instanceof NeuralNet neuralNet))
+        {
+            return false;
+        }
+        boolean isEquals = new EqualsBuilder().append(hiddenLayers, neuralNet.hiddenLayers)
+                                              .isEquals();
+
+        return isEquals && new EqualsBuilder().append(inputDim, neuralNet.inputDim)
+                                              .append(learningRate, neuralNet.learningRate)
+                                              .append(useRegularization,
+                                                      neuralNet.useRegularization)
+                                              .append(inputLayer, neuralNet.inputLayer)
+                                              .append(outputLayer, neuralNet.outputLayer)
+                                              .append(parameters, neuralNet.parameters)
+                                              .append(lossFunction, neuralNet.lossFunction)
+                                              .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37).append(inputDim).append(inputLayer).append(hiddenLayers)
+                                          .append(outputLayer).append(parameters)
+                                          .append(learningRate).append(lossFunction)
+                                          .append(useRegularization).toHashCode();
+    }
+
+    public void save(Path dest) throws IOException
+    {
+        new NeuralNetSerializer().serialize(this, dest);
+    }
+
+    public static NeuralNet load(Path dest) throws IOException
+    {
+        return new NeuralNetSerializer().deserialize(dest);
     }
 
 }

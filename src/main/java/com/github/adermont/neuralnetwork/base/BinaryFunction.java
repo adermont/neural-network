@@ -1,4 +1,6 @@
-package com.github.adermont.neuralnetwork.math;
+package com.github.adermont.neuralnetwork.base;
+
+import com.github.adermont.neuralnetwork.math.Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,13 +18,12 @@ public abstract class BinaryFunction extends Value implements DoubleBinaryOperat
         this.operator = op;
         this.self = left;
         this.other = right;
-        this.data = data();
+        this.data = applyAsDouble(left.doubleValue(), right.doubleValue());
     }
 
     public BinaryFunction(String op, Value left, Value right)
     {
-//        this(left.label + op + right.label, op, left, right);
-        this(null, op, left, right);
+        this("", op, left, right);
     }
 
     public String operator()
@@ -34,11 +35,6 @@ public abstract class BinaryFunction extends Value implements DoubleBinaryOperat
     public List<Value> children()
     {
         return Arrays.asList(self, other);
-    }
-
-    public Number data()
-    {
-        return applyAsDouble(self.data.doubleValue(), other.data.doubleValue());
     }
 
     public void resetGradient()

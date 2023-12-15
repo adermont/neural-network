@@ -1,5 +1,7 @@
 package com.github.adermont.neuralnetwork.math;
 
+import com.github.adermont.neuralnetwork.base.BinaryFunction;
+
 public class Power extends BinaryFunction
 {
     public Power(Value value, Value exponent)

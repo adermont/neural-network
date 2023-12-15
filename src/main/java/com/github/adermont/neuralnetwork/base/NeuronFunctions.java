@@ -17,6 +17,16 @@ public interface NeuronFunctions
 
     NeuronFunctions SOFTMAX = new SoftMax();
 
+    static NeuronFunctions forName(String name){
+        if ( IDENTITY.name().equals(name) ) return IDENTITY;
+        if ( HEAVISIDE.name().equals(name) ) return HEAVISIDE;
+        if ( RELU.name().equals(name) ) return RELU;
+        if ( SIGMOID.name().equals(name) ) return SIGMOID;
+        if ( TANH.name().equals(name) ) return TANH;
+        if ( SOFTMAX.name().equals(name) ) return SOFTMAX;
+        return null;
+    }
+
     default String name()
     {
         return getClass().getSimpleName().toLowerCase();
